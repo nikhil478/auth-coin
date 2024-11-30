@@ -1,4 +1,4 @@
-# Auth Coin
+# Auth Coin Protocol
 
 This library enables the creation of authorized coins, allowing each coin to be independently verified without needing to trace back to the origin contract. It is compatible with any blockchain that operates on the Bitcoin Virtual Machine (BVM) and supports basic opcodes.
 
@@ -22,4 +22,4 @@ In a typical UTXO model, control is held by the private key holder, and the smar
 
 ### Approach Overview:
 
-The concept is similar to embedding the `<sig>` of the issuer’s private key into each child UTXO’s locking script. This approach effectively treats the issuer’s private key as a unique off-chain smart contract, which can be authorized using a ledger. Ultimately, the idea is to use cryptography and the ledger for authorization, as opposed to relying solely on op-scripts and the ledger.
+The protocol concept is similar to embedding the `<sig>` of the issuer’s private key into each child UTXO’s locking script. This approach effectively treats the issuer’s private key as a unique off-chain smart contract, which can be authorized using a ledger. Ultimately, the idea is to use cryptography and the ledger for authorization, as opposed to relying solely on op-scripts and the ledger.
