@@ -3,15 +3,12 @@ package auth_coin
 import "github.com/nikhil478/auth-coin/internal/models"
 
 type IVerifier interface {
-	Verify(utxo models.UTXO, publicKey string)
+	Verify(utxo models.UTXO, issuerPublicKey string)
 }
 
 type ISigner interface {
-	Deploy(utxo models.UTXO, privateKey string, data []string)
-	Issue(utxo models.UTXO, privateKey string, destinationAddress string)
-	Transfer(utxo models.UTXO, privateKey string, destinationAddress string)
-	Split(utxo models.UTXO, privateKey string, destinationAddress map[string]int)
-	Merge(utxo []models.UTXO, privateKey string, destinationAddress string)
-	MergeSplit(utxo []models.UTXO, privateKey string, destinationAddress map[string]int)
-	AtomicSwap(utxo1 models.UTXO, utxo2 models.UTXO, destinationAddress1 string, destinationAddress2 string)
+	Deploy(utxo models.UTXO, issuerPrivateKey string, data []string)
+	Issue(utxo models.UTXO, issuerPublicKey string, issuerPrivateKey string, holderPrivateKey string, destinationAddress string, amount int)
+	Transfer(txHex string, outputIndex string, holderPrivateKey string, issuerPublicKey string, issuerPrivateKey string, privateKey string, destinationAddress string)
+	Split(txHex string, holderPrivateKey string, issuerPrivateKey string, issuerPublicKey string, destinationAddress map[string]int)
 }
