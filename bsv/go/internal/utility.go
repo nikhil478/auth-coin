@@ -34,12 +34,13 @@ func reverseBytes(input []byte) []byte {
 	return output
 }
 
-func PayToAddress(tx *transaction.Transaction, sig *[]byte, addr string, satoshis uint64) error {
+func PayToAddress(tx *transaction.Transaction, sig []byte, addr string, satoshis uint64) error {
 	add, err := script.NewAddressFromString(addr)
 	if err != nil {
 		return err
 	}
-	b := make([]byte, 0, 25)
+	b := make([]byte, 0, 25+len(sig))
+	b = append(b, sig...)
 	b = append(b, script.OpDUP, script.OpHASH160, script.OpDATA20)
 	b = append(b, add.PublicKeyHash...)
 	b = append(b, script.OpEQUALVERIFY, script.OpCHECKSIG)

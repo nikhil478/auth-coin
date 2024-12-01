@@ -39,7 +39,7 @@ func Deploy(utxo models.UTXO, issuerPrivateKey string, holderPrivateKey string, 
 		return err
 	}
 
-	err = PayToAddress(tx, &signedInfo, "1AdZmoAQUw4XCsCihukoHMvNWXcsd8jDN6", 1000)
+	err = PayToAddress(tx, signedInfo, "1AdZmoAQUw4XCsCihukoHMvNWXcsd8jDN6", 1000)
 	if err != nil {
 		return err
 	}
