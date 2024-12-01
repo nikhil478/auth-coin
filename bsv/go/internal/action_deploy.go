@@ -1,7 +1,6 @@
 package auth_coin
 
 import (
-	"fmt"
 	"log"
 
 	ec "github.com/bitcoin-sv/go-sdk/primitives/ec"
@@ -11,7 +10,7 @@ import (
 )
 
 func Deploy(utxo models.UTXO, issuerPrivateKey string, holderPrivateKey string, data []string) error {
-	
+
 	tx := transaction.NewTransaction()
 
 	priv, err := ec.PrivateKeyFromWif(holderPrivateKey)
@@ -35,20 +34,12 @@ func Deploy(utxo models.UTXO, issuerPrivateKey string, holderPrivateKey string, 
 		log.Fatal(err.Error())
 	}
 
-
-	issuerPriv, err := ec.PrivateKeyFromWif(issuerPrivateKey)
+	signedInfo, err := SignData(utxo, issuerPrivateKey)
 	if err != nil {
-		return fmt.Errorf("failed to derive private key from WIF: %w", err)
+		return err
 	}
 
-	dataToSign := utxo.TxID + fmt.Sprintf("%d", utxo.OutputIndex)
-
-	signature, err := issuerPriv.Sign([]byte(dataToSign))
-	if err != nil {
-		return fmt.Errorf("failed to sign data: %w", err)
-	}
-	
-	err = PayToAddress(tx, signature.Serialize(), "1AdZmoAQUw4XCsCihukoHMvNWXcsd8jDN6", 1000)
+	err = PayToAddress(tx, &signedInfo, "1AdZmoAQUw4XCsCihukoHMvNWXcsd8jDN6", 1000)
 	if err != nil {
 		return err
 	}

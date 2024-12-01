@@ -5,8 +5,11 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	ec "github.com/bitcoin-sv/go-sdk/primitives/ec"
 	"github.com/bitcoin-sv/go-sdk/script"
 	"github.com/bitcoin-sv/go-sdk/transaction"
+	"github.com/libsv/go-bk/crypto"
+	"github.com/nikhil478/auth-coin/internal/models"
 )
 
 func GetTxIDFromHex(txHex string) (string, error) {
@@ -31,8 +34,7 @@ func reverseBytes(input []byte) []byte {
 	return output
 }
 
-
-func PayToAddress(tx *transaction.Transaction, sig []byte, addr string, satoshis uint64) error {
+func PayToAddress(tx *transaction.Transaction, sig *[]byte, addr string, satoshis uint64) error {
 	add, err := script.NewAddressFromString(addr)
 	if err != nil {
 		return err
@@ -47,4 +49,22 @@ func PayToAddress(tx *transaction.Transaction, sig []byte, addr string, satoshis
 		LockingScript: &s,
 	})
 	return nil
+}
+
+func SignData(utxo models.UTXO, privKey string) ([]byte, error) {
+
+	priv, err := ec.PrivateKeyFromWif(privKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to derive private key from WIF: %w", err)
+	}
+
+	dataToSign :=  crypto.Sha256d([]byte(fmt.Sprintf("%s%d", utxo.TxID, utxo.OutputIndex)))
+
+	signature, err := priv.Sign(dataToSign)
+	if err != nil {
+		return nil, fmt.Errorf("failed to sign data: %w", err)
+	}
+
+	sigSerialized := signature.Serialize()
+	return sigSerialized, nil
 }
