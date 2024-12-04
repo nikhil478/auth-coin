@@ -9,19 +9,19 @@ import (
 	"github.com/nikhil478/auth-coin/internal/models"
 )
 
-func Deploy(utxo models.UTXO, issuerPrivateKey string, holderPrivateKey string, data []string) error {
+func Deploy(utxo models.UTXO, issuerPrivateKey string, holderPrivateKey string, data []string) (*string , error) {
 
 	tx := transaction.NewTransaction()
 
 	priv, err := ec.PrivateKeyFromWif(holderPrivateKey)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	unlockingScriptTemplate, err := p2pkh.Unlock(priv, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if err := tx.AddInputFrom(
@@ -36,15 +36,18 @@ func Deploy(utxo models.UTXO, issuerPrivateKey string, holderPrivateKey string, 
 
 	signedInfo, err := SignData(utxo, issuerPrivateKey)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = PayToAddress(tx, signedInfo, "1AdZmoAQUw4XCsCihukoHMvNWXcsd8jDN6", 1000)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if err := tx.Sign(); err != nil {
 		log.Fatal(err.Error())
 	}
-	return nil
+
+	hex := tx.Hex()
+
+	return &hex, nil
 }

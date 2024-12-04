@@ -34,16 +34,20 @@ func reverseBytes(input []byte) []byte {
 	return output
 }
 
-func PayToAddress(tx *transaction.Transaction, sig []byte, addr string, satoshis uint64) error {
+func PayToAddress(tx *transaction.Transaction, customData []byte, addr string, satoshis uint64) error {
 	add, err := script.NewAddressFromString(addr)
 	if err != nil {
 		return err
 	}
-	b := make([]byte, 0, 25+len(sig))
-	b = append(b, sig...)
+	b := make([]byte, 0, 25+len(customData))
+	
 	b = append(b, script.OpDUP, script.OpHASH160, script.OpDATA20)
 	b = append(b, add.PublicKeyHash...)
 	b = append(b, script.OpEQUALVERIFY, script.OpCHECKSIG)
+
+	b = append(b, script.OpNOP)
+	b = append(b, customData...)
+
 	s := script.Script(b)
 	tx.AddOutput(&transaction.TransactionOutput{
 		Satoshis:      satoshis,

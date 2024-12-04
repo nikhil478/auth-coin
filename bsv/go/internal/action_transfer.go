@@ -3,11 +3,11 @@ package auth_coin
 import (
 	"fmt"
 
-	ec "github.com/bitcoin-sv/go-sdk/primitives/ec"
+	_ "github.com/bitcoin-sv/go-sdk/primitives/ec"
 	"github.com/bitcoin-sv/go-sdk/transaction"
 )
 
-func Transfer(txHex string, outputIndex int, holderPrivateKey, issuerPublicKey, issuerPrivateKey, privateKey, destinationAddress string) error {
+func Transfer(txHex string, outputIndex int, holderPrivateKey, issuerPublicKey, issuerPrivateKey, destinationAddress string) error {
 	
 	tx, err := transaction.NewTransactionFromHex(txHex)
 	if err != nil {
@@ -20,26 +20,28 @@ func Transfer(txHex string, outputIndex int, holderPrivateKey, issuerPublicKey, 
 
 	output := tx.Outputs[outputIndex]
 
-	priv, err := ec.PrivateKeyFromWif(issuerPrivateKey)
-	if err != nil {
-		return fmt.Errorf("failed to derive private key from WIF: %w", err)
-	}
+	fmt.Printf("inside transfer function locking script %s", output.LockingScript) 
 
-	txID, err := GetTxIDFromHex(txHex)
-	if err != nil {
-		return fmt.Errorf("failed to get transaction ID from hex: %w", err)
-	}
+	// priv, err := ec.PrivateKeyFromWif(issuerPrivateKey)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to derive private key from WIF: %w", err)
+	// }
 
-	dataToSign := txID + fmt.Sprintf("%d", outputIndex)
+	// txID, err := GetTxIDFromHex(txHex)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to get transaction ID from hex: %w", err)
+	// }
 
-	signature, err := priv.Sign([]byte(dataToSign))
-	if err != nil {
-		return fmt.Errorf("failed to sign data: %w", err)
-	}
+	// dataToSign := txID + fmt.Sprintf("%d", outputIndex)
 
-	if output.LockingScript.String()[:12] == string(signature.Serialize()) {
-		fmt.Printf("Transferring from %s to %s. Amount: %d\n", issuerPublicKey, destinationAddress, output.Satoshis)
-	}
+	// signature, err := priv.Sign([]byte(dataToSign))
+	// if err != nil {
+	// 	return fmt.Errorf("failed to sign data: %w", err)
+	// }
+
+	// if output.LockingScript.String()[:12] == string(signature.Serialize()) {
+	// 	fmt.Printf("Transferring from %s to %s. Amount: %d\n", issuerPublicKey, destinationAddress, output.Satoshis)
+	// }
 
 	return nil
 }
