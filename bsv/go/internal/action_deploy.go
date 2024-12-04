@@ -9,12 +9,11 @@ import (
 	"github.com/nikhil478/auth-coin/internal/models"
 )
 
-func Deploy(utxo models.UTXO, issuerPrivateKey string, holderPrivateKey string, data []string) (*string , error) {
+func Deploy(utxo *models.UTXO, issuerPrivateKey *string, holderPrivateKey *string, destinationAddress *string, supply uint64,  additionalData *[]byte, feeUtxo *models.UTXO) (*string , error) {
 
 	tx := transaction.NewTransaction()
 
-	priv, err := ec.PrivateKeyFromWif(holderPrivateKey)
-
+	priv, err := ec.PrivateKeyFromWif(*holderPrivateKey)
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +30,17 @@ func Deploy(utxo models.UTXO, issuerPrivateKey string, holderPrivateKey string, 
 		uint64(utxo.Amount),
 		unlockingScriptTemplate,
 	); err != nil {
-		log.Fatal(err.Error())
+		return nil, err
+	}
+
+	if err := tx.AddInputFrom(
+		feeUtxo.TxID,
+		uint32(feeUtxo.OutputIndex),
+		feeUtxo.Script,
+		uint64(feeUtxo.Amount),
+		unlockingScriptTemplate,
+	); err != nil {
+		return nil, err
 	}
 
 	signedInfo, err := SignData(utxo, issuerPrivateKey)
@@ -39,7 +48,9 @@ func Deploy(utxo models.UTXO, issuerPrivateKey string, holderPrivateKey string, 
 		return nil, err
 	}
 
-	err = PayToAddress(tx, signedInfo, "1AdZmoAQUw4XCsCihukoHMvNWXcsd8jDN6", 1000)
+	signedInfo = append(signedInfo, *additionalData...)
+
+	err = AddOutputWithSignature(tx, destinationAddress, supply, &signedInfo)
 	if err != nil {
 		return nil, err
 	}

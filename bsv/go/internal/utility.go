@@ -34,19 +34,19 @@ func reverseBytes(input []byte) []byte {
 	return output
 }
 
-func PayToAddress(tx *transaction.Transaction, customData []byte, addr string, satoshis uint64) error {
-	add, err := script.NewAddressFromString(addr)
+func AddOutputWithSignature(tx *transaction.Transaction, addr *string, satoshis uint64, customData *[]byte,) error {
+	add, err := script.NewAddressFromString(*addr)
 	if err != nil {
 		return err
 	}
-	b := make([]byte, 0, 25+len(customData))
+	b := make([]byte, 0, 25+len(*customData))
 	
 	b = append(b, script.OpDUP, script.OpHASH160, script.OpDATA20)
 	b = append(b, add.PublicKeyHash...)
 	b = append(b, script.OpEQUALVERIFY, script.OpCHECKSIG)
 
 	b = append(b, script.OpNOP)
-	b = append(b, customData...)
+	b = append(b, *customData...)
 
 	s := script.Script(b)
 	tx.AddOutput(&transaction.TransactionOutput{
@@ -56,9 +56,9 @@ func PayToAddress(tx *transaction.Transaction, customData []byte, addr string, s
 	return nil
 }
 
-func SignData(utxo models.UTXO, privKey string) ([]byte, error) {
+func SignData(utxo *models.UTXO, privKey *string) ([]byte, error) {
 
-	priv, err := ec.PrivateKeyFromWif(privKey)
+	priv, err := ec.PrivateKeyFromWif(*privKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to derive private key from WIF: %w", err)
 	}

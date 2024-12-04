@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	auth_coin "github.com/nikhil478/auth-coin/internal"
 	"github.com/nikhil478/auth-coin/internal/models"
@@ -14,11 +15,14 @@ func main() {
 		Script:      "76a91464229ed55930a6479b9b4731e4e79fbf7e379c8f88ac",
 		Amount:      1000,
 	}
-	hex, err := auth_coin.Deploy(utxo, "L3Fbe9AHwfyypLt2eMGDb6TBunJeh43PvnkJfRdgL1pkF92mZsWd", 
-		"L3Fbe9AHwfyypLt2eMGDb6TBunJeh43PvnkJfRdgL1pkF92mZsWd", []string{"Hello World", "Address "})
-	if err != nil {
-		fmt.Println("Error during deploy:", err.Error())
-		return
+	privateKey := "L3Fbe9AHwfyypLt2eMGDb6TBunJeh43PvnkJfRdgL1pkF92mZsWd"
+	destinationAddress := ""
+	additionalData := []string{"Hello World", "Address "}
+	stringByte := []byte(strings.Join(additionalData, " "))
+	hex, err := auth_coin.Deploy(&utxo, &privateKey, 
+		&privateKey, &destinationAddress ,  100, &stringByte, &utxo)
+	if err != nil { 
+		fmt.Errorf("error %s", err.Error())
 	}
 	auth_coin.Transfer(*hex, 0, "L3Fbe9AHwfyypLt2eMGDb6TBunJeh43PvnkJfRdgL1pkF92mZsWd", "", "L3Fbe9AHwfyypLt2eMGDb6TBunJeh43PvnkJfRdgL1pkF92mZsWd","")
 }
