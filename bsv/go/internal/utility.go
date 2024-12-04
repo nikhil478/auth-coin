@@ -39,6 +39,7 @@ func AddOutputWithSignature(tx *transaction.Transaction, addr *string, satoshis 
 	if err != nil {
 		return err
 	}
+	
 	b := make([]byte, 0, 25+len(*customData))
 	
 	b = append(b, script.OpDUP, script.OpHASH160, script.OpDATA20)
@@ -53,6 +54,7 @@ func AddOutputWithSignature(tx *transaction.Transaction, addr *string, satoshis 
 		Satoshis:      satoshis,
 		LockingScript: &s,
 	})
+
 	return nil
 }
 

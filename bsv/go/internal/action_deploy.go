@@ -7,9 +7,10 @@ import (
 	"github.com/bitcoin-sv/go-sdk/transaction"
 	"github.com/bitcoin-sv/go-sdk/transaction/template/p2pkh"
 	"github.com/nikhil478/auth-coin/internal/models"
+	"github.com/pkg/errors"
 )
 
-func Deploy(utxo *models.UTXO, issuerPrivateKey *string, holderPrivateKey *string, destinationAddress *string, supply uint64,  additionalData *[]byte, feeUtxo *models.UTXO) (*string , error) {
+func Deploy(utxo *models.UTXO, issuerPrivateKey *string, holderPrivateKey *string, destinationAddress *string, changeAddress *string, supply uint64,  additionalData *[]byte, feeUtxo *models.UTXO) (*string , error) {
 
 	tx := transaction.NewTransaction()
 
@@ -21,6 +22,10 @@ func Deploy(utxo *models.UTXO, issuerPrivateKey *string, holderPrivateKey *strin
 	unlockingScriptTemplate, err := p2pkh.Unlock(priv, nil)
 	if err != nil {
 		return nil, err
+	}
+
+	if utxo.Amount < int(supply) {
+		return nil, errors.New("input utxo amount is less than supply value")
 	}
 
 	if err := tx.AddInputFrom(
@@ -54,6 +59,11 @@ func Deploy(utxo *models.UTXO, issuerPrivateKey *string, holderPrivateKey *strin
 	if err != nil {
 		return nil, err
 	}
+
+	if utxo.Amount > int(supply) {
+		tx.PayToAddress(*changeAddress, uint64(utxo.Amount) - supply)
+	}
+
 	if err := tx.Sign(); err != nil {
 		log.Fatal(err.Error())
 	}

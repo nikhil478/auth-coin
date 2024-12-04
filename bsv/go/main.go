@@ -20,7 +20,7 @@ func main() {
 	additionalData := []string{"Hello World", "Address "}
 	stringByte := []byte(strings.Join(additionalData, " "))
 	hex, err := auth_coin.Deploy(&utxo, &privateKey, 
-		&privateKey, &destinationAddress ,  100, &stringByte, &utxo)
+		&privateKey, &destinationAddress , &destinationAddress, 100, &stringByte, &utxo)
 	if err != nil { 
 		fmt.Errorf("error %s", err.Error())
 	}
