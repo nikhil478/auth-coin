@@ -2,47 +2,68 @@ package auth_coin
 
 import (
 	"fmt"
+	"log"
 
-	_ "github.com/bitcoin-sv/go-sdk/primitives/ec"
+	ec "github.com/bitcoin-sv/go-sdk/primitives/ec"
 	"github.com/bitcoin-sv/go-sdk/transaction"
+	"github.com/bitcoin-sv/go-sdk/transaction/template/p2pkh"
+	"github.com/pkg/errors"
 )
 
-func Transfer(txHex string, outputIndex int, holderPrivateKey, issuerPublicKey, issuerPrivateKey, destinationAddress string) error {
-	
+func Transfer(txHex string, outputIndex int, holderPrivateKey, issuerPublicKey, issuerPrivateKey, destinationAddress string) (*string, error) {
+
 	tx, err := transaction.NewTransactionFromHex(txHex)
 	if err != nil {
-		return fmt.Errorf("failed to parse transaction: %w", err)
+		return nil, fmt.Errorf("failed to parse transaction: %w", err)
 	}
 
-	if outputIndex < 0 || outputIndex >= len(tx.Outputs) {
-		return fmt.Errorf("output index %d out of range", outputIndex)
+	isValid, err := ValidateUtxo(tx, outputIndex, &issuerPublicKey)
+	if !isValid {
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New("utxo is not valid")
 	}
 
-	output := tx.Outputs[outputIndex]
+	utxo, err := ParseUtxo(tx, outputIndex)
+	if err != nil {
+		return nil, err
+	}
+	signedInfo, err := SignUtxo(utxo , &issuerPrivateKey)
+	if err != nil {
+		return nil, err
+	}
 
-	fmt.Printf("inside transfer function locking script %s", output.LockingScript) 
+	priv, err := ec.PrivateKeyFromWif(issuerPrivateKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to derive private key from WIF: %w", err)
+	}
 
-	// priv, err := ec.PrivateKeyFromWif(issuerPrivateKey)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to derive private key from WIF: %w", err)
-	// }
+	unlockingScriptTemplate, err := p2pkh.Unlock(priv, nil)
+	if err != nil {
+		return nil, err
+	}
 
-	// txID, err := GetTxIDFromHex(txHex)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to get transaction ID from hex: %w", err)
-	// }
+	if err := tx.AddInputFrom(
+		utxo.TxID,
+		uint32(utxo.OutputIndex),
+		utxo.Script,
+		uint64(utxo.Amount),
+		unlockingScriptTemplate,
+	); err != nil {
+		return nil, err
+	}
 
-	// dataToSign := txID + fmt.Sprintf("%d", outputIndex)
+	err = AddOutputWithSignature(tx, &destinationAddress, uint64(utxo.Amount), &signedInfo)
+	if err != nil {
+		return nil, err
+	}
 
-	// signature, err := priv.Sign([]byte(dataToSign))
-	// if err != nil {
-	// 	return fmt.Errorf("failed to sign data: %w", err)
-	// }
+	if err := tx.Sign(); err != nil {
+		log.Fatal(err.Error())
+	}
 
-	// if output.LockingScript.String()[:12] == string(signature.Serialize()) {
-	// 	fmt.Printf("Transferring from %s to %s. Amount: %d\n", issuerPublicKey, destinationAddress, output.Satoshis)
-	// }
+	hex := tx.Hex()
 
-	return nil
+	return &hex, nil
 }
-

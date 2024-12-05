@@ -48,7 +48,7 @@ func Deploy(utxo *models.UTXO, issuerPrivateKey *string, holderPrivateKey *strin
 		return nil, err
 	}
 
-	signedInfo, err := SignData(utxo, issuerPrivateKey)
+	signedInfo, err := SignUtxo(utxo, issuerPrivateKey)
 	if err != nil {
 		return nil, err
 	}
