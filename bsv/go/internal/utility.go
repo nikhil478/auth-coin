@@ -149,3 +149,13 @@ func ParseUtxo(tx *transaction.Transaction, outputIndex int) (*models.UTXO, erro
 
 	return &utxo, nil
 }
+
+func AddOutputs(tx *transaction.Transaction, destinationList map[string]int, signedInfo *[]byte) error {
+	for destination, amount := range destinationList {
+		err := AddOutputWithSignature(tx, &destination, uint64(amount), signedInfo)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
